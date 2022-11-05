@@ -5,6 +5,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
+import re
 
 def get_driver_instance():
     driver = webdriver.Chrome(service=ChromeService(executable_path=ChromeDriverManager().install()))
@@ -26,6 +27,7 @@ def get_cat(s):
     return list(zip(x, y))
 
 def get_one_cat_items(tds):
+    
     href = tds[0].select("a")[0].get("href")
     name = tds[0].select("a")[0].get_text()
     company_number = tds[1].get_text()
@@ -35,7 +37,16 @@ def get_one_cat_items(tds):
     volume_batch = tds[5].get_text()
     volume_value = tds[6].get_text()
 
-    r = (name, href, company_number, avg_price, diff_value, diff_percent, volume_batch, volume_batch)
+    leader_name = tds[7].select("a")[0].get_text()
+    leader_symbol = tds[7].get_text()
+    m = re.match("^.*\((.*)\)$", leader_symbol)
+    leader_symbol = m.group(1)
+
+    leader_diff_value = tds[8].select("span")[0].get_text()
+    leader_current_price = tds[9].select("span")[0].get_text()
+    leader_diff_ratio = tds[10].select("span")[0].get_text()
+    
+    r = (name, company_number, avg_price, diff_value, diff_percent, volume_batch, volume_batch, leader_name, leader_symbol, leader_diff_ratio, leader_current_price, leader_diff_value)
     return r
 
 def get_one_cat(driver, cat):
@@ -45,7 +56,7 @@ def get_one_cat(driver, cat):
     driver.implicitly_wait(10.0)
     time.sleep(1.0)
     one_cat.click()
-    time.sleep(1.0)
+    time.sleep(0.5)
     driver.implicitly_wait(10.0)
     s = BeautifulSoup(driver.page_source, 'lxml')
     s = s.find_all("div", class_="tblOuter")
@@ -65,7 +76,7 @@ if __name__ == "__main__":
         print(cat)
         items = get_one_cat(driver, cat)
         print(len(items))
-        cols = ["name", "link", "companys", "avg_price", "diff_price", "diff_ratio", "volume_units", "volume_value"]
+        cols = ["name", "companys", "avg_price", "diff_price", "diff_ratio", "volume_units", "volume_value", "leader_name", "leader_symbol", "leader_diff_ratio", "leader_current_price", "leader_diff_price"]
         dataframe = pd.DataFrame(columns=cols, data=items)
         print(dataframe)
         dataframe.to_csv(cat[0] + ".csv")
