@@ -1,0 +1,5 @@
+packaging
+pandas
+webdriver_manager
+selenium
+bs4
