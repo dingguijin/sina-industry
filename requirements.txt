@@ -3,3 +3,4 @@ pandas
 webdriver_manager
 selenium
 bs4
+lxml
